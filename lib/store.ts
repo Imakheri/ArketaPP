@@ -29,7 +29,7 @@ export function getClasses(): ClassItem[] {
 }
 
 export function bookClass(classId: string, userId: string): Promise<ClassItem | null> {
-  return writeQueue.add(() => {
+  return writeQueue.add(async () => {
     const store = getStore();
     const cls = store.classes.find((c) => c.id === classId);
     if (!cls) return null;
@@ -38,6 +38,9 @@ export function bookClass(classId: string, userId: string): Promise<ClassItem | 
 
     const classDate = new Date(cls.datetime);
     if (classDate.getTime() < Date.now()) return null;
+
+    // simulates async latency (e.g. a DB call) — creates the window for a race condition
+    await Promise.resolve();
 
     cls.bookedUserIds.push(userId);
     console.log("[book]", classId, "user:", userId, "→", cls.bookedUserIds.length, "of", cls.capacity);
