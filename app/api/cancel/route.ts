@@ -5,6 +5,6 @@ export async function POST(req: Request) {
   const body = await req.json();
   const { classId, userId } = body;
 
-  const updated = cancelBooking(classId, userId);
+  const updated = await cancelBooking(classId, userId);
   return NextResponse.json({ class: updated });
 }
