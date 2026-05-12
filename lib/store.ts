@@ -26,10 +26,7 @@ export function bookClass(classId: string, userId: string): ClassItem | null {
   if (cls.bookedUserIds.includes(userId)) return null;
 
   const classDate = new Date(cls.datetime);
-
-  if (classDate.getTime() < Date.now()){
-    return null;
-  }
+  if (classDate.getTime() < Date.now()) return null;
 
   cls.bookedUserIds.push(userId);
   console.log("[book]", classId, "user:", userId, "→", cls.bookedUserIds.length, "of", cls.capacity);
