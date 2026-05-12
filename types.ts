@@ -5,6 +5,7 @@ export type ClassItem = {
   datetime: string;
   capacity: number;
   bookedUserIds: string[];
+  waitlistUserIds: string[];
 };
 
 export type MockUser = {

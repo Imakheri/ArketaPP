@@ -2,13 +2,12 @@
 
 import { useState } from "react";
 import type { ClassItem, MockUser } from "@/types";
-import { cancelBooking } from "@/lib/api";
+import { leaveWaitlist } from "@/lib/api";
 
 type Props = {
   classInfo: ClassItem;
   currentUser: MockUser;
   onClassUpdate: (updated: ClassItem) => void;
-  onPromotion: (promotedUserId: string, className: string) => void;
 };
 
 function formatWhen(iso: string): string {
@@ -22,15 +21,15 @@ function formatWhen(iso: string): string {
   });
 }
 
-export default function BookedClassRow({ classInfo, currentUser, onClassUpdate, onPromotion }: Props) {
+export default function WaitlistItem({ classInfo, currentUser, onClassUpdate }: Props) {
   const [pending, setPending] = useState(false);
+  const position = classInfo.waitlistUserIds.indexOf(currentUser.id) + 1;
 
-  async function handleCancel() {
+  async function handleLeave() {
     setPending(true);
     try {
-      const result = await cancelBooking(classInfo.id, currentUser.id);
-      onClassUpdate(result.class);
-      if (result.promotedUserId) onPromotion(result.promotedUserId, classInfo.name);
+      const updated = await leaveWaitlist(classInfo.id, currentUser.id);
+      onClassUpdate(updated);
     } catch (err) {
       console.error(err);
     } finally {
@@ -45,16 +44,16 @@ export default function BookedClassRow({ classInfo, currentUser, onClassUpdate, 
           {classInfo.name}
         </span>
         <span className="text-xs text-zinc-500 dark:text-zinc-400">
-          {classInfo.instructor} · {formatWhen(classInfo.datetime)}
+          {classInfo.instructor} · {formatWhen(classInfo.datetime)} · #{position} on waitlist
         </span>
       </div>
       <button
-        onClick={handleCancel}
+        onClick={handleLeave}
         disabled={pending}
-        aria-label={`Cancel ${classInfo.name} as ${currentUser.name}`}
+        aria-label={`Leave waitlist for ${classInfo.name}`}
         className="rounded border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-900 hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800"
       >
-        Cancel
+        Leave
       </button>
     </div>
   );
