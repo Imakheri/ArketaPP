@@ -11,7 +11,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Class is full" }, { status: 400 });
   }
 
-  const updated = bookClass(classId, userId);
+  const updated = await bookClass(classId, userId);
   if (!updated) {
     return NextResponse.json({ error: "Already booked" }, { status: 409 });
   }
