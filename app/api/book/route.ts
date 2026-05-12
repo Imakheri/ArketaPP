@@ -1,19 +1,13 @@
 import { NextResponse } from "next/server";
-import { bookClass, getClasses } from "@/lib/store";
+import { bookClass } from "@/lib/store";
 
-// TODO: validate classId exists
 export async function POST(req: Request) {
-  const body = await req.json();
-  const { classId, userId } = body;
-
-  const cls = getClasses().find((c) => c.id === classId);
-  if (cls && cls.bookedUserIds.length  >= cls.capacity) {
-    return NextResponse.json({ error: "Class is full" }, { status: 400 });
+  const { classId, userId } = await req.json();
+  try {
+    const cls = await bookClass(classId, userId);
+    return NextResponse.json({ class: cls });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Booking failed.";
+    return NextResponse.json({ error: message }, { status: 409 });
   }
-
-  const updated = await bookClass(classId, userId);
-  if (!updated) {
-    return NextResponse.json({ error: "Already booked" }, { status: 409 });
-  }
-  return NextResponse.json({ class: updated });
 }

@@ -5,8 +5,9 @@ class AsyncQueue {
   private queue: Promise<unknown> = Promise.resolve();
 
   add<T>(fn: () => T): Promise<Awaited<T>> {
-    this.queue = this.queue.then(() => fn());
-    return this.queue as Promise<Awaited<T>>;
+    const result = this.queue.then(() => fn());
+    this.queue = result.catch(() => {});
+    return result as Promise<Awaited<T>>;
   }
 }
 
@@ -28,31 +29,31 @@ export function getClasses(): ClassItem[] {
   return getStore().classes;
 }
 
-export function bookClass(classId: string, userId: string): Promise<ClassItem | null> {
+export function bookClass(classId: string, userId: string): Promise<ClassItem> {
   return writeQueue.add(async () => {
     const store = getStore();
     const cls = store.classes.find((c) => c.id === classId);
-    if (!cls) return null;
+    if (!cls) throw new Error("Class does not exist");
 
-    if (cls.bookedUserIds.includes(userId)) return null;
+    if (cls.bookedUserIds.includes(userId)) throw new Error("You're already booked for this class.");
 
-    const classDate = new Date(cls.datetime);
-    if (classDate.getTime() < Date.now()) return null;
+    if (new Date(cls.datetime).getTime() < Date.now()) throw new Error("This class has already taken place.");
 
     // simulates async latency (e.g. a DB call) — creates the window for a race condition
     await Promise.resolve();
 
+    if (cls.bookedUserIds.length >= cls.capacity) throw new Error("Class is now full.");
     cls.bookedUserIds.push(userId);
     console.log("[book]", classId, "user:", userId, "→", cls.bookedUserIds.length, "of", cls.capacity);
     return cls;
   });
 }
 
-export function cancelBooking(classId: string, userId: string): Promise<{ class: ClassItem; promotedUserId: string | null } | null> {
+export function cancelBooking(classId: string, userId: string): Promise<{ class: ClassItem; promotedUserId: string | null }> {
   return writeQueue.add(() => {
     const store = getStore();
     const cls = store.classes.find((c) => c.id === classId);
-    if (!cls) return null;
+    if (!cls) throw new Error("Class not found.");
 
     cls.bookedUserIds = cls.bookedUserIds.filter((id) => id !== userId);
     console.log("[cancel]", classId, "user:", userId, "→", cls.bookedUserIds.length, "of", cls.capacity);
@@ -68,13 +69,13 @@ export function cancelBooking(classId: string, userId: string): Promise<{ class:
   });
 }
 
-export function joinWaitlist(classId: string, userId: string): Promise<ClassItem | null> {
+export function joinWaitlist(classId: string, userId: string): Promise<ClassItem> {
   return writeQueue.add(() => {
     const store = getStore();
     const cls = store.classes.find((c) => c.id === classId);
-    if (!cls) return null;
-    if (cls.bookedUserIds.includes(userId)) return null;
-    if (cls.waitlistUserIds.includes(userId)) return null;
+    if (!cls) throw new Error("Class does not exist");
+    if (cls.bookedUserIds.includes(userId)) throw new Error("You already have a spot in this class.");
+    if (cls.waitlistUserIds.includes(userId)) throw new Error("You're already on the waitlist for this class.");
 
     cls.waitlistUserIds.push(userId);
     console.log("[waitlist]", classId, "user:", userId, "→ position", cls.waitlistUserIds.length);
@@ -82,11 +83,11 @@ export function joinWaitlist(classId: string, userId: string): Promise<ClassItem
   });
 }
 
-export function leaveWaitlist(classId: string, userId: string): Promise<ClassItem | null> {
+export function leaveWaitlist(classId: string, userId: string): Promise<ClassItem> {
   return writeQueue.add(() => {
     const store = getStore();
     const cls = store.classes.find((c) => c.id === classId);
-    if (!cls) return null;
+    if (!cls) throw new Error("Class does not exist");
 
     cls.waitlistUserIds = cls.waitlistUserIds.filter((id) => id !== userId);
     console.log("[waitlist-leave]", classId, "user:", userId);

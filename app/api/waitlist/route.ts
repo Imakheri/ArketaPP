@@ -3,20 +3,22 @@ import { joinWaitlist, leaveWaitlist } from "@/lib/store";
 
 export async function POST(req: Request) {
   const { classId, userId } = await req.json();
-
-  const updated = await joinWaitlist(classId, userId);
-  if (!updated) {
-    return NextResponse.json({ error: "Could not join waitlist" }, { status: 409 });
+  try {
+    const cls = await joinWaitlist(classId, userId);
+    return NextResponse.json({ class: cls });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Could not join waitlist.";
+    return NextResponse.json({ error: message }, { status: 409 });
   }
-  return NextResponse.json({ class: updated });
 }
 
 export async function DELETE(req: Request) {
   const { classId, userId } = await req.json();
-
-  const updated = await leaveWaitlist(classId, userId);
-  if (!updated) {
-    return NextResponse.json({ error: "Class not found" }, { status: 404 });
+  try {
+    const cls = await leaveWaitlist(classId, userId);
+    return NextResponse.json({ class: cls });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Could not leave waitlist.";
+    return NextResponse.json({ error: message }, { status: 409 });
   }
-  return NextResponse.json({ class: updated });
 }

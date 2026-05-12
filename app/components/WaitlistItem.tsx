@@ -8,6 +8,7 @@ type Props = {
   classInfo: ClassItem;
   currentUser: MockUser;
   onClassUpdate: (updated: ClassItem) => void;
+  onError: (message: string) => void;
 };
 
 function formatWhen(iso: string): string {
@@ -21,7 +22,7 @@ function formatWhen(iso: string): string {
   });
 }
 
-export default function WaitlistItem({ classInfo, currentUser, onClassUpdate }: Props) {
+export default function WaitlistItem({ classInfo, currentUser, onClassUpdate, onError }: Props) {
   const [pending, setPending] = useState(false);
   const position = classInfo.waitlistUserIds.indexOf(currentUser.id) + 1;
 
@@ -31,7 +32,7 @@ export default function WaitlistItem({ classInfo, currentUser, onClassUpdate }: 
       const updated = await leaveWaitlist(classInfo.id, currentUser.id);
       onClassUpdate(updated);
     } catch (err) {
-      console.error(err);
+      onError(err instanceof Error ? err.message : "Could not leave waitlist. Please try again.");
     } finally {
       setPending(false);
     }

@@ -6,6 +6,7 @@ import { fetchClasses } from "@/lib/api";
 import { MOCK_USERS } from "@/lib/users";
 import ClassList from "./components/ClassList";
 import MyBookings from "./components/MyBookings";
+import ErrorToast from "./components/ErrorToast";
 
 export default function Home() {
   const [classes, setClasses] = useState<ClassItem[]>([]);
@@ -13,6 +14,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [promotionMessage, setPromotionMessage] = useState<string | null>(null);
   const [pendingPromotion, setPendingPromotion] = useState<{ userId: string; className: string } | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     fetchClasses()
@@ -39,6 +41,9 @@ export default function Home() {
 
   return (
     <main className="mx-auto w-full max-w-5xl">
+      {errorMessage && (
+        <ErrorToast message={errorMessage} onDismiss={() => setErrorMessage(null)} />
+      )}
       {promotionMessage && (
         <div className="mx-6 mt-6 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800 dark:border-green-800 dark:bg-green-950 dark:text-green-200">
           {promotionMessage}
@@ -50,12 +55,14 @@ export default function Home() {
         currentUser={currentUser}
         onUserChange={setCurrentUser}
         onLocalUpdate={handleLocalUpdate}
+        onError={setErrorMessage}
       />
       <MyBookings
         classes={classes}
         currentUser={currentUser}
         onClassUpdate={handleLocalUpdate}
         onPromotion={handlePromotion}
+        onError={setErrorMessage}
       />
     </main>
   );

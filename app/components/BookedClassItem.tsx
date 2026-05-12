@@ -9,6 +9,7 @@ type Props = {
   currentUser: MockUser;
   onClassUpdate: (updated: ClassItem) => void;
   onPromotion: (promotedUserId: string, className: string) => void;
+  onError: (message: string) => void;
 };
 
 function formatWhen(iso: string): string {
@@ -22,7 +23,7 @@ function formatWhen(iso: string): string {
   });
 }
 
-export default function BookedClassRow({ classInfo, currentUser, onClassUpdate, onPromotion }: Props) {
+export default function BookedClassRow({ classInfo, currentUser, onClassUpdate, onPromotion, onError }: Props) {
   const [pending, setPending] = useState(false);
 
   async function handleCancel() {
@@ -32,7 +33,7 @@ export default function BookedClassRow({ classInfo, currentUser, onClassUpdate, 
       onClassUpdate(result.class);
       if (result.promotedUserId) onPromotion(result.promotedUserId, classInfo.name);
     } catch (err) {
-      console.error(err);
+      onError(err instanceof Error ? err.message : "Cancel failed. Please try again.");
     } finally {
       setPending(false);
     }
