@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { ClassItem, MockUser } from "@/types";
-import { bookClass } from "@/lib/api";
+import { bookClass, joinWaitlist } from "@/lib/api";
 
 type Props = {
   classInfo: ClassItem;
@@ -24,11 +24,27 @@ function formatWhen(iso: string): string {
 export default function ClassCard({ classInfo, currentUser, onLocalUpdate }: Props) {
   const [pending, setPending] = useState(false);
   const spotsLeft = classInfo.capacity - classInfo.bookedUserIds.length;
+  const isFull = spotsLeft === 0;
+  const isBooked = classInfo.bookedUserIds.includes(currentUser.id);
+  const isOnWaitlist = classInfo.waitlistUserIds.includes(currentUser.id);
+  const waitlistPosition = classInfo.waitlistUserIds.indexOf(currentUser.id) + 1;
 
   async function handleBook() {
     setPending(true);
     try {
       const updated = await bookClass(classInfo.id, currentUser.id);
+      onLocalUpdate(updated);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setPending(false);
+    }
+  }
+
+  async function handleJoinWaitlist() {
+    setPending(true);
+    try {
+      const updated = await joinWaitlist(classInfo.id, currentUser.id);
       onLocalUpdate(updated);
     } catch (err) {
       console.error(err);
@@ -51,21 +67,38 @@ export default function ClassCard({ classInfo, currentUser, onLocalUpdate }: Pro
       <div className="text-sm text-zinc-700 dark:text-zinc-300">
         <div>{formatWhen(classInfo.datetime)}</div>
         <div>
-          {
-            spotsLeft > 0 ? `${classInfo.bookedUserIds.length} of ${classInfo.capacity} booked · ${spotsLeft} spots left ` : "Not spots left"
-          }
+          {isFull
+            ? `Full · ${classInfo.waitlistUserIds.length} on waitlist`
+            : `${classInfo.bookedUserIds.length} of ${classInfo.capacity} booked · ${spotsLeft} spots left`}
         </div>
       </div>
 
       <div className="mt-1 flex gap-2">
-        <button
-          onClick={handleBook}
-          disabled={pending || spotsLeft === 0}
-          aria-label={`Book ${classInfo.name} as ${currentUser.name}`}
-          className="rounded bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-zinc-700 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
-        >
-          Book
-        </button>
+        {!isFull && (
+          <button
+            onClick={handleBook}
+            disabled={pending}
+            aria-label={`Book ${classInfo.name} as ${currentUser.name}`}
+            className="rounded bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-zinc-700 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
+          >
+            Book
+          </button>
+        )}
+        {isFull && !isBooked && !isOnWaitlist && (
+          <button
+            onClick={handleJoinWaitlist}
+            disabled={pending}
+            aria-label={`Join waitlist for ${classInfo.name} as ${currentUser.name}`}
+            className="rounded border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-900 hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800"
+          >
+            Join Waitlist
+          </button>
+        )}
+        {isFull && isOnWaitlist && (
+          <span className="text-sm text-zinc-500 dark:text-zinc-400">
+            #{waitlistPosition} on waitlist
+          </span>
+        )}
       </div>
     </div>
   );
