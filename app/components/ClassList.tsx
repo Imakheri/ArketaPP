@@ -10,9 +10,10 @@ type Props = {
   currentUser: MockUser;
   onUserChange: (user: MockUser) => void;
   onLocalUpdate: (updated: ClassItem) => void;
+  onError: (message: string) => void;
 };
 
-export default function ClassList({ classes, loading, currentUser, onUserChange, onLocalUpdate }: Props) {
+export default function ClassList({ classes, loading, currentUser, onUserChange, onLocalUpdate, onError }: Props) {
   return (
     <div className="flex flex-col gap-6 p-6 sm:p-10">
       <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -37,6 +38,7 @@ export default function ClassList({ classes, loading, currentUser, onUserChange,
               classInfo={c}
               currentUser={currentUser}
               onLocalUpdate={onLocalUpdate}
+              onError={onError}
             />
           ))}
         </div>

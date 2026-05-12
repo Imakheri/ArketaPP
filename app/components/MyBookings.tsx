@@ -9,9 +9,10 @@ type Props = {
   currentUser: MockUser;
   onClassUpdate: (updated: ClassItem) => void;
   onPromotion: (promotedUserId: string, className: string) => void;
+  onError: (message: string) => void;
 };
 
-export default function MyBookings({ classes, currentUser, onClassUpdate, onPromotion }: Props) {
+export default function MyBookings({ classes, currentUser, onClassUpdate, onPromotion, onError }: Props) {
   const bookedClasses = classes.filter((c) => c.bookedUserIds.includes(currentUser.id));
   const waitlistedClasses = classes.filter((c) => c.waitlistUserIds.includes(currentUser.id));
 
@@ -31,6 +32,7 @@ export default function MyBookings({ classes, currentUser, onClassUpdate, onProm
               currentUser={currentUser}
               onClassUpdate={onClassUpdate}
               onPromotion={onPromotion}
+              onError={onError}
             />
           ))
         )}
@@ -47,6 +49,7 @@ export default function MyBookings({ classes, currentUser, onClassUpdate, onProm
               classInfo={c}
               currentUser={currentUser}
               onClassUpdate={onClassUpdate}
+              onError={onError}
             />
           ))}
         </div>

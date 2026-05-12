@@ -11,12 +11,12 @@ describe("bookClass - concurrency", () => {
     // hiit-express has capacity 8 and starts with 7 booked users — 1 spot left
     const classId = "hiit-express";
 
-    const [result1, result2] = await Promise.all([
+    const results = await Promise.allSettled([
       bookClass(classId, "u_alex"),
       bookClass(classId, "u_alex"),
     ]);
 
-    const successCount = [result1, result2].filter(Boolean).length;
+    const successCount = results.filter((r) => r.status === "fulfilled").length;
 
     expect(successCount).toBe(1);
 
