@@ -8,12 +8,12 @@ beforeEach(() => {
 
 describe("bookClass - concurrency", () => {
   it("should only allow one booking when two requests arrive simultaneously for the last spot", async () => {
-    // pilates-core class has capacity for 5 users and starts with 4 booked users — 1 spot left
-    const classId = "pilates-core";
+    // hiit-express has capacity 8 and starts with 7 booked users — 1 spot left
+    const classId = "hiit-express";
 
     const [result1, result2] = await Promise.all([
       bookClass(classId, "u_alex"),
-      bookClass(classId, "u_jordan"),
+      bookClass(classId, "u_alex"),
     ]);
 
     const successCount = [result1, result2].filter(Boolean).length;
